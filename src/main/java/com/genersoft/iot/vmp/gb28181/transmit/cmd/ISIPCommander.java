@@ -2,6 +2,7 @@ package com.genersoft.iot.vmp.gb28181.transmit.cmd;
 
 import com.genersoft.iot.vmp.common.StreamInfo;
 import com.genersoft.iot.vmp.conf.exception.SsrcTransactionNotFoundException;
+import com.genersoft.iot.vmp.gb28181.bean.BroadcastItem;
 import com.genersoft.iot.vmp.gb28181.bean.Device;
 import com.genersoft.iot.vmp.gb28181.bean.DeviceAlarm;
 import com.genersoft.iot.vmp.gb28181.event.SipSubscribe;
@@ -361,4 +362,15 @@ public interface ISIPCommander {
 	 */
 	void sendAlarmMessage(Device device, DeviceAlarm deviceAlarm) throws InvalidArgumentException, SipException, ParseException;
 
+	/**
+	 * 语音对讲bye
+	 * @param device
+	 * @param broadcastItem
+	 * @param channelId
+	 * @throws InvalidArgumentException
+	 * @throws SipException
+	 * @throws ParseException
+	 * @throws SsrcTransactionNotFoundException
+	 */
+	void audioByeCmd(Device device, BroadcastItem broadcastItem, String channelId) throws InvalidArgumentException, SipException, ParseException, SsrcTransactionNotFoundException;
 }

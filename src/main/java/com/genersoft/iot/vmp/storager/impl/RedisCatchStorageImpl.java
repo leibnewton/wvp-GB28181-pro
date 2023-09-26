@@ -6,6 +6,7 @@ import com.genersoft.iot.vmp.common.SystemAllInfo;
 import com.genersoft.iot.vmp.common.VideoManagerConstants;
 import com.genersoft.iot.vmp.conf.UserSetting;
 import com.genersoft.iot.vmp.gb28181.bean.AlarmChannelMessage;
+import com.genersoft.iot.vmp.gb28181.bean.BroadcastItem;
 import com.genersoft.iot.vmp.gb28181.bean.Device;
 import com.genersoft.iot.vmp.gb28181.bean.ParentPlatformCatch;
 import com.genersoft.iot.vmp.gb28181.bean.SendRtpItem;
@@ -22,6 +23,7 @@ import com.genersoft.iot.vmp.utils.DateUtil;
 import com.genersoft.iot.vmp.utils.JsonUtil;
 import com.genersoft.iot.vmp.utils.SystemInfoUtils;
 import com.genersoft.iot.vmp.utils.redis.RedisUtil;
+import com.genersoft.iot.vmp.utils.redis.RedisUtil2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -649,5 +651,31 @@ public class RedisCatchStorageImpl implements IRedisCatchStorage {
         String key = VideoManagerConstants.VM_MSG_STREAM_STOP_PLAY_NOTIFY;
         logger.info("[redis发送通知] 发送 上级平台停止观看 {}: {}/{}->{}", key, msg.getApp(), msg.getStream(), msg.getPlatFormId());
         redisTemplate.convertAndSend(key, JSON.toJSON(msg));
+    }
+
+    @Override
+    public boolean addBroadcastItem(String deviceId, BroadcastItem broadcastItem) {
+        String key = VideoManagerConstants.WVP_BROADCAST_FLAG + deviceId;
+
+        return RedisUtil2.set(key, broadcastItem);
+    }
+
+    @Override
+    public BroadcastItem queryBroadcastItem(String deviceId) {
+        String key = VideoManagerConstants.WVP_BROADCAST_FLAG + deviceId;
+        return (BroadcastItem) RedisUtil2.get(key);
+    }
+
+    @Override
+    public boolean deleteBroadcastItem(String deviceId) {
+        String key = VideoManagerConstants.WVP_BROADCAST_FLAG + deviceId;
+        return RedisUtil2.del(key);
+    }
+
+    @Override
+    public boolean isBroadcastItem(String deviceId) {
+        String key = VideoManagerConstants.WVP_BROADCAST_FLAG + deviceId;
+        BroadcastItem broadcastItem = (BroadcastItem) RedisUtil2.get(key);
+        return broadcastItem != null && broadcastItem.getIpcAudioPort() != null;
     }
 }

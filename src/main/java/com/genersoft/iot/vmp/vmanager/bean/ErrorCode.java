@@ -10,7 +10,11 @@ public enum ErrorCode {
     ERROR404(404, "资源未找到"),
     ERROR403(403, "无权限操作"),
     ERROR401(401, "请登录后重新请求"),
-    ERROR500(500, "系统异常");
+    ERROR500(500, "系统异常"),
+    ERROR600(600, "流媒体异常"),
+    ERROR601(601, "webrtc推流未找到"),
+    ERROR602(602, "对讲指令下发失败，请联系管理人员"),
+    ERROR603(603, "设备正在对讲请稍后");
 
     private final int code;
     private final String msg;

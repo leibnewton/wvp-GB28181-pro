@@ -6,8 +6,10 @@ import com.genersoft.iot.vmp.conf.SipConfig;
 import com.genersoft.iot.vmp.conf.UserSetting;
 import com.genersoft.iot.vmp.conf.exception.SsrcTransactionNotFoundException;
 import com.genersoft.iot.vmp.gb28181.SipLayer;
+import com.genersoft.iot.vmp.gb28181.bean.BroadcastItem;
 import com.genersoft.iot.vmp.gb28181.bean.Device;
 import com.genersoft.iot.vmp.gb28181.bean.DeviceAlarm;
+import com.genersoft.iot.vmp.gb28181.bean.SipTransactionInfo;
 import com.genersoft.iot.vmp.gb28181.bean.SsrcTransaction;
 import com.genersoft.iot.vmp.gb28181.event.SipSubscribe;
 import com.genersoft.iot.vmp.gb28181.session.VideoStreamSessionManager;
@@ -1420,5 +1422,28 @@ public class SIPCommander implements ISIPCommander {
         sipSender.transmitRequest(sipLayer.getLocalIp(device.getLocalIp()),request);
 
 
+    }
+
+    /**
+     * 语音对讲bye
+     * @param device
+     * @param broadcastItem
+     * @param channelId
+     * @throws InvalidArgumentException
+     * @throws SipException
+     * @throws ParseException
+     * @throws SsrcTransactionNotFoundException
+     */
+    @Override
+    public void audioByeCmd(Device device, BroadcastItem broadcastItem, String channelId) throws InvalidArgumentException, SipException, ParseException, SsrcTransactionNotFoundException {
+
+        SipTransactionInfo sipTransactionInfo = new SipTransactionInfo();
+        sipTransactionInfo.setCallId(broadcastItem.getCallId());
+        sipTransactionInfo.setFromTag(broadcastItem.getToTag());
+        sipTransactionInfo.setToTag(broadcastItem.getFromTag());
+        sipTransactionInfo.setViaBranch(SipUtils.getNewViaTag());
+        Request byteRequest = headerProvider.createByteRequest(device, channelId, sipTransactionInfo);
+
+        sipSender.transmitRequest(sipLayer.getLocalIp(device.getLocalIp()), byteRequest, null, null);
     }
 }

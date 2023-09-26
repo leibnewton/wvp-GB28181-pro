@@ -3,6 +3,7 @@ package com.genersoft.iot.vmp.gb28181.transmit.event.request.impl;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.genersoft.iot.vmp.common.StreamInfo;
+import com.genersoft.iot.vmp.common.VideoManagerConstants;
 import com.genersoft.iot.vmp.conf.DynamicTask;
 import com.genersoft.iot.vmp.conf.UserSetting;
 import com.genersoft.iot.vmp.gb28181.bean.*;
@@ -28,6 +29,7 @@ import com.genersoft.iot.vmp.service.redisMsg.RedisPushStreamResponseListener;
 import com.genersoft.iot.vmp.storager.IRedisCatchStorage;
 import com.genersoft.iot.vmp.storager.IVideoManagerStorage;
 import com.genersoft.iot.vmp.utils.DateUtil;
+import com.genersoft.iot.vmp.utils.Threads;
 import gov.nist.javax.sdp.TimeDescriptionImpl;
 import gov.nist.javax.sdp.fields.TimeField;
 import gov.nist.javax.sip.message.SIPRequest;
@@ -969,6 +971,8 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
                 String username = sdp.getOrigin().getUsername();
                 String addressStr = sdp.getConnection().getAddress();
                 logger.info("设备{}请求语音流，地址：{}:{}，ssrc：{}", username, addressStr, port, ssrc);
+
+                broadcastInviteOk(request, requesterId, addressStr, port);
             } catch (SdpException e) {
                 logger.error("[SDP解析异常]", e);
             }
@@ -982,6 +986,146 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
             } catch (SipException | InvalidArgumentException | ParseException e) {
                 logger.error("[命令发送失败] invite 来自无效设备/平台的请求， {}", e.getMessage());
             }
+        }
+    }
+
+    public void broadcastInviteOk(SIPRequest request, String deviceId, String addressStr, int port) {
+
+        try {
+
+            String[] content1 = request.toString().replaceAll("(\r\n|\n)", "<br/>").split("<br/>");
+            HashMap<String, String> mapContent = new HashMap<>();
+            for (String s : content1) {
+                if (s.length() > 2) {
+                    if ("=".equals(s.substring(1, 2))) {
+                        String content2[] = s.split("=");
+                        mapContent.put(content2[0], content2[1]);
+                    } else {
+                        if (s.startsWith("From")) {
+                            String content2[] = s.split(":");
+                            mapContent.put("From", content2[2]);
+                        } else if (s.startsWith("To")) {
+                            String content2[] = s.split(":");
+                            mapContent.put("To", content2[2]);
+                        }
+                    }
+                }
+            }
+
+            String[] to = mapContent.get("To").split("@");
+
+            String ssrc = mapContent.get("y");
+
+            String m = mapContent.get("m");
+            String protocolType = null;
+            String payloadNum = null;
+            Integer pt = null;
+            Integer isUdp = null;
+            Integer usePS = null;
+            Integer onlyAudio = null;
+            StringBuffer resultMStr = new StringBuffer();
+            StringBuffer rtpMapStr = new StringBuffer();
+
+            if (m.contains("RTP/AVP")) {
+                protocolType = "RTP/AVP";
+                payloadNum  = m.substring(m.indexOf(protocolType) + protocolType.length() + 1);
+                isUdp = 1;
+            } else if (m.contains("RTP/AVP/TCP")) {
+                protocolType = "RTP/AVP/TCP";
+                payloadNum  = m.substring(m.indexOf(protocolType) + protocolType.length() + 1);
+                isUdp = 0;
+            }
+            resultMStr.append(" ").append(protocolType).append(" ").append(payloadNum).append("\r\n");
+            String[] coderTypeArr = payloadNum.split(" ");
+
+            for (String code : coderTypeArr) {
+                if ("8".equals(code)) {
+                    pt = 8;
+                    usePS = 0;
+                    onlyAudio = 1;
+                    rtpMapStr.append("a=rtpmap:8 PCMA/8000\r\n");
+                    break;
+                }
+                else if ("96".equals(code)) {
+                    pt = 96;
+                    usePS = 1;
+                    onlyAudio = 0;
+                    rtpMapStr.append("a=rtpmap:96 PS/9000\r\n");
+                }
+            }
+            //回复前先开端口
+            BroadcastItem broadcastItem = redisCatchStorage.queryBroadcastItem(deviceId);
+            MediaServerItem mediaServerItem = mediaServerService.getDefaultMediaServer();
+            Map<String, Object> params = new HashMap<>(16);
+            params.put("vhost", "__defaultVhost__");
+            params.put("app", broadcastItem.getApp());
+            params.put("stream", broadcastItem.getStream());
+            params.put("ssrc", ssrc);
+
+            params.put("pt", pt);
+            params.put("use_ps", usePS);
+            params.put("only_audio", onlyAudio);
+            JSONObject startSendRtpResponse= null;
+            if (isUdp == 1) {
+                params.put("is_udp", isUdp);
+                params.put("dst_url", addressStr);
+                params.put("dst_port", port);
+                startSendRtpResponse = zlmServerFactory.startSendRtpStream(mediaServerItem, params);
+            } else {
+                //startSendRtpResponse = zlmServerFactory.startSendRtpPassive(mediaServerItem, params);
+            }
+
+
+            Integer localPort = null;
+
+            if (startSendRtpResponse != null && startSendRtpResponse.getInteger("code").equals(0)) {
+                localPort = startSendRtpResponse.getInteger("local_port");
+            }
+
+            //2.回复设备invite
+            StringBuffer contentEnd = new StringBuffer("v=0\r\n")
+                .append("o=").append(to[0]).append(" 0 0 IN IP4 ").append(mediaServerItem.getIp()).append("\r\n")
+                .append("s=Play\r\n")
+                .append("c=IN IP4 ").append(mediaServerItem.getIp()).append("\r\n")
+                .append("t=0 0\r\n")
+                .append("m=audio ").append(localPort).append(resultMStr)
+                .append(rtpMapStr)
+                .append("a=sendonly\r\n")
+                .append("a=setup:passive\r\n")
+                .append("y=").append(ssrc).append("\r\n");
+
+            if (mapContent.get("f") != null) {
+                contentEnd.append("f=").append(mapContent.get("f").replaceAll("0", "")).append("\r\n");
+            }
+
+            responseSdpAck(request, contentEnd.toString(), null);
+
+            CallIdHeader callIdHeader = (CallIdHeader) request.getHeader(CallIdHeader.NAME);
+            String callId = callIdHeader.getCallId();
+            broadcastItem.setCallId(callId);
+            broadcastItem.setIpcAudioPort(port);
+            broadcastItem.setIpcIp(addressStr);
+            broadcastItem.setSsrc(ssrc);
+            String fromTag = request.getFromTag();
+            String branch = request.getTopmostViaHeader().getBranch();
+            String toTag = request.getToTag();
+            broadcastItem.setViaBranch(branch);
+            broadcastItem.setToTag(toTag);
+            broadcastItem.setFromTag(fromTag);
+            broadcastItem.setLocalPort(localPort);
+            broadcastItem.setLocalIp(mediaServerItem.getIp());
+
+            //存储设备对讲信息及状态
+            redisCatchStorage.addBroadcastItem(deviceId,broadcastItem);
+            //通知talkbackcontroller
+            Object broadcastLock = Threads.getLock(VideoManagerConstants.BROADCAST_LOCK + deviceId);
+
+            synchronized (broadcastLock) {
+                broadcastLock.notifyAll();
+            }
+
+        } catch (SipException | InvalidArgumentException | ParseException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -3,6 +3,7 @@ package com.genersoft.iot.vmp.storager;
 import com.alibaba.fastjson2.JSONObject;
 import com.genersoft.iot.vmp.common.SystemAllInfo;
 import com.genersoft.iot.vmp.gb28181.bean.AlarmChannelMessage;
+import com.genersoft.iot.vmp.gb28181.bean.BroadcastItem;
 import com.genersoft.iot.vmp.gb28181.bean.Device;
 import com.genersoft.iot.vmp.gb28181.bean.ParentPlatformCatch;
 import com.genersoft.iot.vmp.gb28181.bean.SendRtpItem;
@@ -208,4 +209,36 @@ public interface IRedisCatchStorage {
     void sendPlatformStartPlayMsg(MessageForPushChannel messageForPushChannel);
 
     void sendPlatformStopPlayMsg(MessageForPushChannel messageForPushChannel);
+
+    /**
+     * 添加语音对讲信息
+     *
+     * @param deviceId
+     * @return
+     */
+    boolean addBroadcastItem(String deviceId, BroadcastItem broadcastItem);
+
+    /**
+     * 查询语音对讲信息
+     *
+     * @param deviceId
+     * @return
+     */
+    BroadcastItem queryBroadcastItem(String deviceId);
+
+    /**
+     * 删除语音对讲信息
+     *
+     * @param deviceId
+
+     * @return
+     */
+    boolean deleteBroadcastItem(String deviceId);
+
+    /**
+     * 判断是否正在对讲
+     * @param deviceId
+     * @return
+     */
+    boolean isBroadcastItem(String deviceId);
 }

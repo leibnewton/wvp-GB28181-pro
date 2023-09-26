@@ -71,6 +71,8 @@ public class VideoManagerConstants {
 
 	public static final String REGISTER_EXPIRE_TASK_KEY_PREFIX = "VMP_device_register_expire_";
 
+	public static final String WVP_BROADCAST_FLAG  = "WVP_BROADCAST_FLAG_";
+
 
 
 
@@ -173,4 +175,5 @@ public class VideoManagerConstants {
 	 */
 	public static final String REDIS_RECORD_INFO_RES_COUNT_PRE = "GB_RECORD_INFO_RES_COUNT:";
 
+	public static final String BROADCAST_LOCK = "BROAD_LOCK_";
 }
