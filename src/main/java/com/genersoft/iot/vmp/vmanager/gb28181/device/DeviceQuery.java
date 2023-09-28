@@ -81,16 +81,22 @@ public class DeviceQuery {
 	private DynamicTask dynamicTask;
 
 	/**
-	 * 使用ID查询国标设备
-	 * @param deviceId 国标ID
+	 * 使用ID或IP查询国标设备
+	 * @param deviceId 国标ID或IP
 	 * @return 国标设备
 	 */
 	@Operation(summary = "查询国标设备")
 	@Parameter(name = "deviceId", description = "设备国标编号", required = true)
+	@Parameter(name = "port", description = "设备端口")
 	@GetMapping("/devices/{deviceId}")
-	public Device devices(@PathVariable String deviceId){
-		
-		return storager.queryVideoDevice(deviceId);
+	public Device devices(@PathVariable String deviceId, Integer port){
+		if (port == null) {
+			return storager.queryVideoDevice(deviceId);
+		}
+		if (port == 0) {
+			port = 5060;
+		}
+		return deviceService.getDeviceByHostAndPort(deviceId, port);
 	}
 
 	/**
