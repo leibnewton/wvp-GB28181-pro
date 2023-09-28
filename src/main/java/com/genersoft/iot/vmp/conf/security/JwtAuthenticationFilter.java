@@ -40,7 +40,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         if (!userSetting.isInterfaceAuthentication()) {
-            UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(null, null, new ArrayList<>() );
+            User user = new User();
+            user.setUsername("admin");
+            UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>() );
             SecurityContextHolder.getContext().setAuthentication(token);
             chain.doFilter(request, response);
             return;
