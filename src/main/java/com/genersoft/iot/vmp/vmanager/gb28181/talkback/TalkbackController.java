@@ -105,7 +105,13 @@ public class TalkbackController {
     @GetMapping("/start/{deviceId}/{channelId}/{app}/{stream}")
     public WVPResult start(@PathVariable("deviceId") String deviceId, @PathVariable("channelId") String channelId,
                            @PathVariable("app") String app, @PathVariable("stream") String stream) throws InterruptedException {
-        BroadcastItem broadcastItem = new BroadcastItem();
+        BroadcastItem broadcastItem = redisCatchStorage.queryBroadcastItem(deviceId);
+        if (broadcastItem != null && broadcastItem.getIpcAudioPort() != null && broadcastItem.getLocalPort() != null) {
+            logger.warn("语音对讲--->{}:{}已开始，无需重复开启",deviceId,channelId);
+            return WVPResult.success(); // 幂等返回成功
+        }
+
+        broadcastItem = new BroadcastItem();
 
         String lock = null;
 
@@ -162,6 +168,7 @@ public class TalkbackController {
             //告诉设备停止语音对讲，发送bye
             BroadcastItem broadcastItem = redisCatchStorage.queryBroadcastItem(deviceId);
             if (broadcastItem == null) {
+                logger.warn("停止语音对讲--->{}:{}, 对讲未开启",deviceId,channelId);
                 return WVPResult.fail(ErrorCode.ERROR450);
             }
             Device device = deviceService.getDevice(deviceId);
