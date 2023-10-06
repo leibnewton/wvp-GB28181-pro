@@ -161,6 +161,9 @@ public class TalkbackController {
         try {
             //告诉设备停止语音对讲，发送bye
             BroadcastItem broadcastItem = redisCatchStorage.queryBroadcastItem(deviceId);
+            if (broadcastItem == null) {
+                return WVPResult.fail(ErrorCode.ERROR450);
+            }
             Device device = deviceService.getDevice(deviceId);
             cmder.audioByeCmd(device,broadcastItem,channelId);
             //改变语音对讲状态记录
