@@ -18,6 +18,7 @@ import com.genersoft.iot.vmp.utils.Threads;
 import com.genersoft.iot.vmp.vmanager.bean.ErrorCode;
 import com.genersoft.iot.vmp.vmanager.bean.WVPResult;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import javax.sip.InvalidArgumentException;
@@ -64,10 +65,10 @@ public class TalkbackController {
     @GetMapping("/getWebRtcAddr/{deviceId}/{channelId}")
     public WVPResult getWebRtcAddr(@PathVariable("deviceId") String deviceId, @PathVariable("channelId") String channelId) {
 
-        //首先判断设备是否正在对讲
-        if (redisCatchStorage.isBroadcastItem(deviceId)) {
-            return WVPResult.fail(ErrorCode.ERROR603);
-        }
+//        //首先判断设备是否正在对讲
+//        if (redisCatchStorage.isBroadcastItem(deviceId)) {
+//            return WVPResult.fail(ErrorCode.ERROR603);
+//        }
 
         Device device = deviceService.getDevice(deviceId);
         MediaServerItem mediaServerItem = playService.getNewMediaServerItem(device);
@@ -79,7 +80,7 @@ public class TalkbackController {
 
         Map<String, Object> result = new HashMap<>(16);
         String app = "audio";
-        String stream = deviceId + "_" + channelId;
+        String stream = deviceId + "_" + channelId + "_" + Instant.now().toEpochMilli();
         String type = "push";
         LoginUser userInfo = SecurityUtils.getUserInfo();
         String sign = Md5Utils.hash(userService.getUserByUsername(userInfo.getUsername()).getPushKey()); //获取推流鉴权密钥
@@ -107,8 +108,15 @@ public class TalkbackController {
                            @PathVariable("app") String app, @PathVariable("stream") String stream) throws InterruptedException {
         BroadcastItem broadcastItem = redisCatchStorage.queryBroadcastItem(deviceId);
         if (broadcastItem != null && broadcastItem.getIpcAudioPort() != null && broadcastItem.getLocalPort() != null) {
-            logger.warn("语音对讲--->{}:{}已开始，无需重复开启",deviceId,channelId);
-            return WVPResult.success(); // 幂等返回成功
+            String curApp = broadcastItem.getApp();
+            String curStream = broadcastItem.getStream();
+            if (curApp.equals(app) && curStream.equals(stream)) {
+                logger.warn("语音对讲--->{}/{}已开始，无需重复开启", app, stream);
+                return WVPResult.success(); // 幂等返回成功
+            }
+            logger.error("语音对讲--->任务冲突，{}/{}正在进行，{}/{}无法开启", curApp, curStream, app, stream);
+            return WVPResult.fail(ErrorCode.ERROR603.getCode(),
+                String.format("%s: %s/%s正在进行", ErrorCode.ERROR603.getMsg(), curApp, curStream));
         }
 
         broadcastItem = new BroadcastItem();
