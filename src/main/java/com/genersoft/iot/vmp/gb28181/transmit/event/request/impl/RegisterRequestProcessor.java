@@ -101,7 +101,7 @@ public class RegisterRequestProcessor extends SIPRequestProcessorParent implemen
                     userSetting.getSipUseSourceIpAsRemoteAddress());
             String requestAddress = remoteAddressInfo.getIp() + ":" + remoteAddressInfo.getPort();
             String title = registerFlag ? "[注册请求]": "[注销请求]";
-                    logger.info(title + "设备：{}, 开始处理: {}", deviceId, requestAddress);
+            logger.info(title + "设备：{}, 开始处理: {}, localIp: {}", deviceId, requestAddress, request.getLocalAddress().getHostAddress());
             if (device != null &&
                 device.getSipTransactionInfo() != null &&
                 request.getCallIdHeader().getCallId().equals(device.getSipTransactionInfo().getCallId())) {
