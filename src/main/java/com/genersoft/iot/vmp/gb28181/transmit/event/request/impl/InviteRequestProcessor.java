@@ -992,7 +992,7 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
     public void broadcastInviteOk(SIPRequest request, String deviceId, String addressStr, int port) {
 
         try {
-
+            logger.info("设备{} @{} broadcastInviteOk: {}", deviceId, addressStr, request.toString());
             String[] content1 = request.toString().replaceAll("(\r\n|\n)", "<br/>").split("<br/>");
             HashMap<String, String> mapContent = new HashMap<>();
             for (String s : content1) {
@@ -1099,6 +1099,7 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
             }
 
             responseSdpAck(request, contentEnd.toString(), null);
+            logger.info("返回设备{} @{} ack: {}", deviceId, addressStr, contentEnd.toString());
 
             CallIdHeader callIdHeader = (CallIdHeader) request.getHeader(CallIdHeader.NAME);
             String callId = callIdHeader.getCallId();
