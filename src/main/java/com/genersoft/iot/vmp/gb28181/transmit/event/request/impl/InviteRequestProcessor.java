@@ -1083,10 +1083,11 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
             }
 
             //2.回复设备invite
+            String sdpIp = mediaServerItem.getSdpIp();
             StringBuffer contentEnd = new StringBuffer("v=0\r\n")
-                .append("o=").append(to[0]).append(" 0 0 IN IP4 ").append(mediaServerItem.getIp()).append("\r\n")
+                .append("o=").append(to[0]).append(" 0 0 IN IP4 ").append(sdpIp).append("\r\n")
                 .append("s=Play\r\n")
-                .append("c=IN IP4 ").append(mediaServerItem.getIp()).append("\r\n")
+                .append("c=IN IP4 ").append(sdpIp).append("\r\n")
                 .append("t=0 0\r\n")
                 .append("m=audio ").append(localPort).append(resultMStr)
                 .append(rtpMapStr)
@@ -1114,7 +1115,7 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
             broadcastItem.setToTag(toTag);
             broadcastItem.setFromTag(fromTag);
             broadcastItem.setLocalPort(localPort);
-            broadcastItem.setLocalIp(mediaServerItem.getIp());
+            broadcastItem.setLocalIp(sdpIp);
 
             //存储设备对讲信息及状态
             redisCatchStorage.addBroadcastItem(deviceId,broadcastItem);
