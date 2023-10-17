@@ -1043,7 +1043,7 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
                     pt = 8;
                     usePS = 0;
                     onlyAudio = 1;
-                    rtpMapStr.append("a=rtpmap:8 PCMA/8000\r\n");
+                    rtpMapStr.append("a=rtpmap:8 PCMA/8000/1\r\n");
                     break;
                 }
                 else if ("96".equals(code)) {
