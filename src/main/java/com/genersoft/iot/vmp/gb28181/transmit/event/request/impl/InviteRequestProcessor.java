@@ -1026,14 +1026,14 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
             StringBuffer resultMStr = new StringBuffer();
             StringBuffer rtpMapStr = new StringBuffer();
 
-            if (m.contains("RTP/AVP")) {
-                protocolType = "RTP/AVP";
-                payloadNum  = m.substring(m.indexOf(protocolType) + protocolType.length() + 1);
-                isUdp = 1;
-            } else if (m.contains("RTP/AVP/TCP")) {
+            if (m.contains("RTP/AVP/TCP")) {
                 protocolType = "RTP/AVP/TCP";
                 payloadNum  = m.substring(m.indexOf(protocolType) + protocolType.length() + 1);
                 isUdp = 0;
+            } else if (m.contains("RTP/AVP")) {
+                protocolType = "RTP/AVP";
+                payloadNum  = m.substring(m.indexOf(protocolType) + protocolType.length() + 1);
+                isUdp = 1;
             }
             resultMStr.append(" ").append(protocolType).append(" ").append(payloadNum).append("\r\n");
             String[] coderTypeArr = payloadNum.split(" ");
@@ -1071,8 +1071,10 @@ public class InviteRequestProcessor extends SIPRequestProcessorParent implements
                 params.put("dst_url", addressStr);
                 params.put("dst_port", port);
                 startSendRtpResponse = zlmServerFactory.startSendRtpStream(mediaServerItem, params);
+                logger.info("为设备{} @{} 申请udp端口结果: {}", deviceId, addressStr, startSendRtpResponse.toString());
             } else {
-                //startSendRtpResponse = zlmServerFactory.startSendRtpPassive(mediaServerItem, params);
+                startSendRtpResponse = zlmServerFactory.startSendRtpStreamForPassive(mediaServerItem, params);
+                logger.info("为设备{} @{} 申请tcp端口结果: {}", deviceId, addressStr, startSendRtpResponse.toString());
             }
 
 
