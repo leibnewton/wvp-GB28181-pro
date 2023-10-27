@@ -74,6 +74,9 @@ public class VideoManagerStorageImpl implements IVideoManagerStorage {
     private PlatformChannelMapper platformChannelMapper;
 
 	@Autowired
+	private PlatformCatalogMapper platformCatalogMapper;
+
+	@Autowired
     private StreamProxyMapper streamProxyMapper;
 
 	@Autowired
@@ -126,6 +129,7 @@ public class VideoManagerStorageImpl implements IVideoManagerStorage {
 
 		List<DeviceChannel> updateChannels = new ArrayList<>();
 		List<DeviceChannel> addChannels = new ArrayList<>();
+		List<DeviceChannel> deleteChannels = new ArrayList<>();
 		StringBuilder stringBuilder = new StringBuilder();
 		Map<String, Integer> subContMap = new HashMap<>();
 
@@ -156,6 +160,7 @@ public class VideoManagerStorageImpl implements IVideoManagerStorage {
 				deviceChannel.setUpdateTime(DateUtil.getNow());
 				addChannels.add(deviceChannel);
 			}
+			allChannelMap.remove(deviceChannel.getChannelId());
 			channels.add(deviceChannel);
 			if (!ObjectUtils.isEmpty(deviceChannel.getParentId())) {
 				if (subContMap.get(deviceChannel.getParentId()) == null) {
@@ -166,7 +171,8 @@ public class VideoManagerStorageImpl implements IVideoManagerStorage {
 				}
 			}
 		}
-		if (channels.size() > 0) {
+		deleteChannels.addAll(allChannelMap.values());
+		if (!channels.isEmpty()) {
 			for (DeviceChannel channel : channels) {
 				if (subContMap.get(channel.getChannelId()) != null){
 					Integer count = subContMap.get(channel.getChannelId());
@@ -187,20 +193,8 @@ public class VideoManagerStorageImpl implements IVideoManagerStorage {
 		}
 		try {
 			int limitCount = 50;
-			int cleanChannelsResult = 0;
-			if (channels.size() > limitCount) {
-				for (int i = 0; i < channels.size(); i += limitCount) {
-					int toIndex = i + limitCount;
-					if (i + limitCount > channels.size()) {
-						toIndex = channels.size();
-					}
-					cleanChannelsResult += this.deviceChannelMapper.cleanChannelsNotInList(deviceId, channels.subList(i, toIndex));
-				}
-			} else {
-				cleanChannelsResult = this.deviceChannelMapper.cleanChannelsNotInList(deviceId, channels);
-			}
-			boolean result = cleanChannelsResult < 0;
-			if (!result && addChannels.size() > 0) {
+			boolean result = false;
+			if (!result && !addChannels.isEmpty()) {
 				if (addChannels.size() > limitCount) {
 					for (int i = 0; i < addChannels.size(); i += limitCount) {
 						int toIndex = i + limitCount;
@@ -213,7 +207,7 @@ public class VideoManagerStorageImpl implements IVideoManagerStorage {
 					result = result || deviceChannelMapper.batchAdd(addChannels) < 0;
 				}
 			}
-			if (!result && updateChannels.size() > 0) {
+			if (!result && !updateChannels.isEmpty()) {
 				if (updateChannels.size() > limitCount) {
 					for (int i = 0; i < updateChannels.size(); i += limitCount) {
 						int toIndex = i + limitCount;
@@ -224,6 +218,20 @@ public class VideoManagerStorageImpl implements IVideoManagerStorage {
 					}
 				}else {
 					result = result || deviceChannelMapper.batchUpdate(updateChannels) < 0;
+				}
+			}
+			if (!result && !deleteChannels.isEmpty()) {
+				System.out.println("删除： " + deleteChannels.size());
+				if (deleteChannels.size() > limitCount) {
+					for (int i = 0; i < deleteChannels.size(); i += limitCount) {
+						int toIndex = i + limitCount;
+						if (i + limitCount > deleteChannels.size()) {
+							toIndex = deleteChannels.size();
+						}
+						result = result || deviceChannelMapper.batchDel(deleteChannels.subList(i, toIndex)) < 0;
+					}
+				}else {
+					result = result || deviceChannelMapper.batchDel(deleteChannels) < 0;
 				}
 			}
 
@@ -910,7 +918,41 @@ public class VideoManagerStorageImpl implements IVideoManagerStorage {
 			eventPublisher.catalogEventPublish(platformId, deviceChannelList, CatalogEvent.DEL);
 		}
 		int delChannelresult = platformChannelMapper.delByCatalogId(platformId, id);
+		// 查看是否存在子目录，如果存在一并删除
+		List<String> allChildCatalog = getAllChildCatalog(id, platformId);
+		if (!allChildCatalog.isEmpty()) {
+			int limitCount = 50;
+			if (allChildCatalog.size() > limitCount) {
+				for (int i = 0; i < allChildCatalog.size(); i += limitCount) {
+					int toIndex = i + limitCount;
+					if (i + limitCount > allChildCatalog.size()) {
+						toIndex = allChildCatalog.size();
+					}
+					delChannelresult += platformCatalogMapper.deleteAll(platformId, allChildCatalog.subList(i, toIndex));
+				}
+			}else {
+				delChannelresult += platformCatalogMapper.deleteAll(platformId, allChildCatalog);
+			}
+		}
 		return delresult + delChannelresult + delStreamresult;
+	}
+
+	private List<String> getAllChildCatalog(String id, String platformId) {
+		List<String> catalogList = platformCatalogMapper.queryCatalogFromParent(id, platformId);
+		List<String> catalogListChild = new ArrayList<>();
+		if (catalogList != null && !catalogList.isEmpty()) {
+			for (String childId : catalogList) {
+				List<String> allChildCatalog = getAllChildCatalog(childId, platformId);
+				if (allChildCatalog != null && !allChildCatalog.isEmpty()) {
+					catalogListChild.addAll(allChildCatalog);
+				}
+
+			}
+		}
+		if (!catalogListChild.isEmpty()) {
+			catalogList.addAll(catalogListChild);
+		}
+		return catalogList;
 	}
 
 
