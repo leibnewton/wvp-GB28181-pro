@@ -9,6 +9,7 @@ import com.genersoft.iot.vmp.gb28181.bean.Device;
 import com.genersoft.iot.vmp.gb28181.transmit.cmd.impl.SIPCommander;
 import com.genersoft.iot.vmp.media.zlm.dto.MediaServerItem;
 import com.genersoft.iot.vmp.media.zlm.dto.StreamAuthorityInfo;
+import com.genersoft.iot.vmp.media.zlm.dto.hook.OriginType;
 import com.genersoft.iot.vmp.service.IDeviceService;
 import com.genersoft.iot.vmp.service.IPlayService;
 import com.genersoft.iot.vmp.service.IUserService;
@@ -19,6 +20,7 @@ import com.genersoft.iot.vmp.vmanager.bean.ErrorCode;
 import com.genersoft.iot.vmp.vmanager.bean.WVPResult;
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import javax.sip.InvalidArgumentException;
@@ -124,13 +126,26 @@ public class TalkbackController {
         String lock = null;
 
         //1.首先确认该流是否推到流媒体
-        StreamAuthorityInfo streamAuthorityInfo = redisCatchStorage.getStreamAuthorityInfo(app, stream);
-        if (streamAuthorityInfo == null) {
-            logger.error("webrtc推流未找到");
+        LocalDateTime deadline = LocalDateTime.now().plusSeconds(3);
+        while (LocalDateTime.now().isBefore(deadline)) {
+            StreamAuthorityInfo streamAuthorityInfo = redisCatchStorage.getStreamAuthorityInfo(app, stream);
+            if (streamAuthorityInfo == null) {
+                logger.error("webrtc推流 {}/{} 未找到", app, stream);
+                return WVPResult.fail(ErrorCode.ERROR601);
+            }
+            if (streamAuthorityInfo.getOriginType() == OriginType.UNKNOWN.ordinal()) {
+                logger.info("等待webrtc推流 {}/{} 注册", app, stream);
+                Thread.sleep(100);
+                continue;
+            }
+            broadcastItem.setApp(app);
+            broadcastItem.setStream(stream);
+            break;
+        }
+        if (broadcastItem.getApp() == null) {
+            logger.error("webrtc推流 {}/{} 未注册", app, stream);
             return WVPResult.fail(ErrorCode.ERROR601);
         }
-        broadcastItem.setApp(app);
-        broadcastItem.setStream(stream);
         //2.确认推到流媒体，下发语音对讲指令协商对讲端口
         Device device = deviceService.getDevice(deviceId);
         try {
