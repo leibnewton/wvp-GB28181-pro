@@ -70,7 +70,7 @@ public class DeviceChannel {
 	 * 是否有子设备 1有, 0没有
 	 */
 	@Schema(description = "是否有子设备 1有, 0没有")
-	private int parental;
+	private Integer parental;
 	
 	/**
 	 * 父级id
@@ -82,13 +82,13 @@ public class DeviceChannel {
 	 * 信令安全模式  缺省为0; 0:不采用; 2: S/MIME签名方式; 3: S/ MIME加密签名同时采用方式; 4:数字摘要方式
 	 */
 	@Schema(description = "信令安全模式  缺省为0; 0:不采用; 2: S/MIME签名方式; 3: S/ MIME加密签名同时采用方式; 4:数字摘要方式")
-	private int safetyWay;
+	private Integer safetyWay;
 	
 	/**
 	 * 注册方式 缺省为1;1:符合IETFRFC3261标准的认证注册模 式; 2:基于口令的双向认证注册模式; 3:基于数字证书的双向认证注册模式
 	 */
 	@Schema(description = "注册方式 缺省为1;1:符合IETFRFC3261标准的认证注册模 式; 2:基于口令的双向认证注册模式; 3:基于数字证书的双向认证注册模式")
-	private int registerWay;
+	private Integer registerWay;
 	
 	/**
 	 * 证书序列号
@@ -100,13 +100,13 @@ public class DeviceChannel {
 	 * 证书有效标识 缺省为0;证书有效标识:0:无效1: 有效
 	 */
 	@Schema(description = "证书有效标识 缺省为0;证书有效标识:0:无效1: 有效")
-	private int certifiable;
+	private Integer certifiable;
 	
 	/**
 	 * 证书无效原因码
 	 */
 	@Schema(description = "证书无效原因码")
-	private int errCode;
+	private Integer errCode;
 	
 	/**
 	 * 证书终止有效期
@@ -130,7 +130,7 @@ public class DeviceChannel {
 	 * 端口号
 	 */
 	@Schema(description = "端口号")
-	private int port;
+	private Integer port;
 	
 	/**
 	 * 密码
@@ -142,7 +142,7 @@ public class DeviceChannel {
 	 * 云台类型
 	 */
 	@Schema(description = "云台类型")
-	private int PTZType;
+	private Integer PTZType;
 
 	/**
 	 * 云台类型描述字符串
@@ -172,7 +172,7 @@ public class DeviceChannel {
 	 * 遇到过NVR下的IPC下发信令可以推流， 但是 Status 响应 OFF
 	 */
 	@Schema(description = "在线/离线， 1在线,0离线")
-	private boolean status;
+	private Boolean status;
 
 	/**
 	 * 经度
@@ -214,7 +214,7 @@ public class DeviceChannel {
 	 * 子设备数
 	 */
 	@Schema(description = "子设备数")
-	private int subCount;
+	private Integer subCount;
 
 	/**
 	 * 流唯一编号，存在表示正在直播
@@ -226,13 +226,13 @@ public class DeviceChannel {
 	 *  是否含有音频
 	 */
 	@Schema(description = "是否含有音频")
-	private boolean hasAudio;
+	private Boolean hasAudio;
 
 	/**
 	 * 标记通道的类型，0->国标通道 1->直播流通道 2->业务分组/虚拟组织/行政区划
 	 */
 	@Schema(description = "标记通道的类型，0->国标通道 1->直播流通道 2->业务分组/虚拟组织/行政区划")
-	private int channelType;
+	private Integer channelType;
 
 	/**
 	 * 业务分组
@@ -262,7 +262,7 @@ public class DeviceChannel {
 		this.deviceId = deviceId;
 	}
 
-	public void setPTZType(int PTZType) {
+	public void setPTZType(Integer PTZType) {
 		this.PTZType = PTZType;
 		switch (PTZType) {
 			case 0:
@@ -347,11 +347,11 @@ public class DeviceChannel {
 		this.address = address;
 	}
 
-	public int getParental() {
+	public Integer getParental() {
 		return parental;
 	}
 
-	public void setParental(int parental) {
+	public void setParental(Integer parental) {
 		this.parental = parental;
 	}
 
@@ -363,19 +363,19 @@ public class DeviceChannel {
 		this.parentId = parentId;
 	}
 
-	public int getSafetyWay() {
+	public Integer getSafetyWay() {
 		return safetyWay;
 	}
 
-	public void setSafetyWay(int safetyWay) {
+	public void setSafetyWay(Integer safetyWay) {
 		this.safetyWay = safetyWay;
 	}
 
-	public int getRegisterWay() {
+	public Integer getRegisterWay() {
 		return registerWay;
 	}
 
-	public void setRegisterWay(int registerWay) {
+	public void setRegisterWay(Integer registerWay) {
 		this.registerWay = registerWay;
 	}
 
@@ -387,19 +387,19 @@ public class DeviceChannel {
 		this.certNum = certNum;
 	}
 
-	public int getCertifiable() {
+	public Integer getCertifiable() {
 		return certifiable;
 	}
 
-	public void setCertifiable(int certifiable) {
+	public void setCertifiable(Integer certifiable) {
 		this.certifiable = certifiable;
 	}
 
-	public int getErrCode() {
+	public Integer getErrCode() {
 		return errCode;
 	}
 
-	public void setErrCode(int errCode) {
+	public void setErrCode(Integer errCode) {
 		this.errCode = errCode;
 	}
 
@@ -427,11 +427,11 @@ public class DeviceChannel {
 		this.ipAddress = ipAddress;
 	}
 
-	public int getPort() {
+	public Integer getPort() {
 		return port;
 	}
 
-	public void setPort(int port) {
+	public void setPort(Integer port) {
 		this.port = port;
 	}
 
@@ -443,7 +443,7 @@ public class DeviceChannel {
 		this.password = password;
 	}
 
-	public int getPTZType() {
+	public Integer getPTZType() {
 		return PTZType;
 	}
 
@@ -455,11 +455,11 @@ public class DeviceChannel {
 		this.PTZTypeText = PTZTypeText;
 	}
 
-	public boolean isStatus() {
+	public Boolean isStatus() {
 		return status;
 	}
 
-	public void setStatus(boolean status) {
+	public void setStatus(Boolean status) {
 		this.status = status;
 	}
 
@@ -511,19 +511,19 @@ public class DeviceChannel {
 		this.latitudeWgs84 = latitudeWgs84;
 	}
 
-	public int getSubCount() {
+	public Integer getSubCount() {
 		return subCount;
 	}
 
-	public void setSubCount(int subCount) {
+	public void setSubCount(Integer subCount) {
 		this.subCount = subCount;
 	}
 
-	public boolean isHasAudio() {
+	public Boolean isHasAudio() {
 		return hasAudio;
 	}
 
-	public void setHasAudio(boolean hasAudio) {
+	public void setHasAudio(Boolean hasAudio) {
 		this.hasAudio = hasAudio;
 	}
 
@@ -551,11 +551,11 @@ public class DeviceChannel {
 		this.updateTime = updateTime;
 	}
 
-	public int getChannelType() {
+	public Integer getChannelType() {
 		return channelType;
 	}
 
-	public void setChannelType(int channelType) {
+	public void setChannelType(Integer channelType) {
 		this.channelType = channelType;
 	}
 
