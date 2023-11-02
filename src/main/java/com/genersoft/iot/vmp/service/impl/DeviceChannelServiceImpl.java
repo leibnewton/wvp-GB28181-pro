@@ -2,6 +2,7 @@ package com.genersoft.iot.vmp.service.impl;
 
 import com.genersoft.iot.vmp.common.InviteInfo;
 import com.genersoft.iot.vmp.common.InviteSessionType;
+import com.genersoft.iot.vmp.conf.exception.ControllerException;
 import com.genersoft.iot.vmp.gb28181.bean.Device;
 import com.genersoft.iot.vmp.gb28181.bean.DeviceChannel;
 import com.genersoft.iot.vmp.gb28181.utils.Coordtransform;
@@ -11,6 +12,7 @@ import com.genersoft.iot.vmp.storager.IRedisCatchStorage;
 import com.genersoft.iot.vmp.storager.dao.DeviceChannelMapper;
 import com.genersoft.iot.vmp.storager.dao.DeviceMapper;
 import com.genersoft.iot.vmp.utils.DateUtil;
+import com.genersoft.iot.vmp.vmanager.bean.ErrorCode;
 import com.genersoft.iot.vmp.vmanager.bean.ResourceBaseInfo;
 import com.genersoft.iot.vmp.vmanager.gb28181.platform.bean.ChannelReduce;
 import org.slf4j.Logger;
@@ -91,8 +93,7 @@ public class DeviceChannelServiceImpl implements IDeviceChannelService {
         DeviceChannel deviceChannel = channelMapper.queryChannel(deviceId, channelId);
         channel = updateGps(channel, null);
         if (deviceChannel == null) {
-            channel.setCreateTime(now);
-            channelMapper.add(channel);
+            throw new ControllerException(ErrorCode.ERROR404);
         }else {
             channelMapper.update(channel);
         }
