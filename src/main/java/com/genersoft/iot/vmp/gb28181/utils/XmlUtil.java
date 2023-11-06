@@ -235,7 +235,7 @@ public class XmlUtil {
             }
 
             int code = Integer.parseInt(channelId.substring(10, 13));
-            if (code == 136 || code == 137 || code == 138) {
+            if (code == 131 || code == 132 || code == 136 || code == 137 || code == 138) {
                 deviceChannel.setHasAudio(true);
             }else {
                 deviceChannel.setHasAudio(false);

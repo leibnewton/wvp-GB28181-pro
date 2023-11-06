@@ -18,7 +18,9 @@ public class NumericUtil {
      * @return true/false
      */
     public static boolean isDouble(String str) {
-        try { 
+        try {
+            if (str == null)
+                return false;
             Double num2 = Double.valueOf(str);
 //            logger.debug(num2 + " is a valid numeric string!");
             return true;
